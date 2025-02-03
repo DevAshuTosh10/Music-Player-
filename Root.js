@@ -1,71 +1,49 @@
-import React, { render } from 'react';
-import { Router, IndexRoute, Link, Route, browserHistory, hashHistory} from 'react-router';
-import { MUSIC_LIST } from './config/config';
-let PubSub = require('pubsub-js');
+import React from 'react';
+import Progress from './components/progress';
 
-import PlayerPage from './page/player';
-import listPage from './page/list';
-import Logo from './components/logo'
-
-
-let App = React.createClass({
+let Root = React.createClass({
 	componentDidMount() {
 		$("#player").jPlayer({
+			ready: function () {
+				$(this).jPlayer("setMedia", {
+					mp3: "http://oj4t8z2d5.bkt.clouddn.com/%E9%AD%94%E9%AC%BC%E4%B8%AD%E7%9A%84%E5%A4%A9%E4%BD%BF.mp3"
+				}).jPlayer('play');
+			},
 			supplied: "mp3",
 			wmode: "window",
 			useStateClassSkin: true
 		});
-		this.playMusic(MUSIC_LIST[0]);
-		PubSub.subscribe('PLAY_MUSIC', (msg, item) => {
-			this.playMusic(item);
-		});
-		PubSub.subscribe('DEL_MUSIC', (msg, item) => {
+		$("#player").bind($.jPlayer.event.timeupdate, (e) => {
 			this.setState({
-				musicList: this.state.musicList.filter((music) => {
-					return music !== item;
-				})
+				progress: Math.round(e.jPlayer.status.currentTime)
 			});
-		});		
+		});
 	},
-	componentWillUnmount() {
-		PubSub.unsubscribe('PLAY_MUSIC');
-		PubSub.unsubscribe('DEL_MUSIC');
+	componentWillUnmout() {
+		$("#player").unbind($.jPlayer.event.timeupdate);
 	},
 	getInitialState() {
-		return {
-			musicList: MUSIC_LIST,
-			currentMusitItem: {}
+		return {		
+			progress: 0
 		}
-	},	
-	playMusic(item) {
-		$("#player").jPlayer("setMedia", {
-			mp3: item.file
-		}).jPlayer('play');
+	},
+	counterHandler() {
 		this.setState({
-			currentMusitItem: item
+			count: this.state.count + 1
 		});
 	},
     render() {
         return (
-            <div className="container">
-            	<Logo></Logo>
-            	{React.cloneElement(this.props.children, {musicList: this.state.musicList, currentMusitItem: this.state.currentMusitItem})}
+            <div>
+                <h1>Welcome to the React lesson~</h1>
+                <h3>Let us play music</h3>
+                <Progress
+					progress={this.state.progress}
+                >
+                </Progress>
             </div>
         );
     }
-});
-
-let Root = React.createClass({
-	render() {
-	    return (
-		    <Router history={hashHistory}>
-		        <Route path="/" component={App}>
-		            <IndexRoute component={PlayerPage}/>
-		            <Route path="/list" component={listPage} />
-		        </Route>
-		    </Router>
-		);
-	}
 });
 
 export default Root;
