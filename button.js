@@ -1,7 +1,7 @@
 import React from 'react';
 
 let Button = React.createClass({
-	getInitialState() {
+	getInitialState(){
 		return {		
 			count: 0
 		}
